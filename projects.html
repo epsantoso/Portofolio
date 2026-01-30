@@ -27,6 +27,7 @@
             background-color: #f1f5f9;
             color: var(--dark-color);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -49,6 +50,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 0;
+            position: relative;
         }
 
         .logo {
@@ -69,10 +71,23 @@
             color: var(--dark-color);
             font-weight: 500;
             transition: var(--transition);
+            padding: 5px 0;
+            position: relative;
         }
 
-        .nav-links a:hover {
+        .nav-links a:hover,
+        .nav-links a.active {
             color: var(--primary-color);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
         }
 
         .mobile-menu-btn {
@@ -82,6 +97,27 @@
             font-size: 1.5rem;
             color: var(--dark-color);
             cursor: pointer;
+            padding: 5px;
+            z-index: 101;
+        }
+
+        /* Menu Overlay */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 98;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Page Header */
@@ -147,6 +183,8 @@
             overflow: hidden;
             box-shadow: var(--shadow);
             transition: var(--transition);
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .project-card:hover {
@@ -298,6 +336,9 @@
 
         .footer-links li {
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .footer-links a {
@@ -332,22 +373,46 @@
 
             .nav-links {
                 position: fixed;
-                top: 80px;
-                left: 0;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
                 background-color: white;
-                width: 100%;
                 flex-direction: column;
-                padding: 20px;
+                padding: 100px 30px 30px;
                 box-shadow: var(--shadow);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: var(--transition);
+                transition: right 0.4s ease;
                 z-index: 99;
+                gap: 20px;
+                margin: 0;
             }
 
             .nav-links.active {
-                transform: translateY(0);
-                opacity: 1;
+                right: 0;
+            }
+
+            .nav-links li {
+                width: 100%;
+            }
+
+            .nav-links a {
+                display: block;
+                padding: 12px 20px;
+                border-radius: 8px;
+                transition: var(--transition);
+            }
+
+            .nav-links a:hover {
+                background-color: #f1f5f9;
+            }
+
+            .nav-links a.active::after {
+                display: none;
+            }
+
+            .nav-links a.active {
+                background-color: #e0f2fe;
+                color: var(--primary-color);
             }
 
             .page-header h1 {
@@ -372,6 +437,10 @@
             .project-links {
                 flex-direction: column;
             }
+            
+            .project-card {
+                margin-bottom: 20px;
+            }
         }
     </style>
 </head>
@@ -382,7 +451,7 @@
             <nav class="navbar">
                 <a href="index.html" class="logo">Portofolio</a>
                 
-                <button class="mobile-menu-btn">
+                <button class="mobile-menu-btn" aria-label="Toggle menu">
                     <i class="fas fa-bars"></i>
                 </button>
                 
@@ -393,6 +462,8 @@
                     <li><a href="index.html#skills">Keahlian</a></li>
                     <li><a href="index.html#contact">Kontak</a></li>
                 </ul>
+                
+                <div class="menu-overlay"></div>
             </nav>
         </div>
     </header>
@@ -585,14 +656,12 @@
                     <h3>Portofolio</h3>
                     <p>Sebuah tampilan dari pekerjaan, keahlian, dan pengalaman saya dalam pengembangan web dan desain.</p>
                     <div class="social-links">
-                      <!--   <a href="#"><i class="fab fa-github"></i></a>  -->
-
-                       <!--  <a href="#"><i class="fab fa-linkedin-in"></i></a>  -->
-
-                       <!--  <a href="#"><i class="fab fa-twitter"></i></a>  -->
-
-                       <!--  <a href="#"><i class="fab fa-instagram"></i></a>  -->
-
+                        <!--
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        -->
                     </div>
                 </div>
                 <div class="footer-column">
@@ -608,8 +677,8 @@
                 <div class="footer-column">
                     <h3>Informasi Kontak</h3>
                     <ul class="footer-links">
-                        <li><i class="fas fa-envelope"></i> eko2805@yahoo.com </li>
-                        <li><i class="fas fa-phone"></i> +6285880083999 </li>
+                        <li><i class="fas fa-envelope"></i> eko2805@yahoo.com</li>
+                        <li><i class="fas fa-phone"></i> +6285880083999</li>
                         <li><i class="fas fa-map-marker-alt"></i> Pati, Indonesia</li>
                     </ul>
                 </div>
@@ -621,23 +690,53 @@
     </footer>
 
     <script>
-        // Mobile Menu Toggle
+        // Mobile Menu Toggle - FIXED
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const navLinks = document.querySelector('.nav-links');
-        
-        mobileMenuBtn.addEventListener('click', () => {
+        const menuOverlay = document.querySelector('.menu-overlay');
+        const body = document.body;
+
+        function toggleMobileMenu() {
+            const isActive = navLinks.classList.contains('active');
+            
+            // Toggle menu
             navLinks.classList.toggle('active');
-            mobileMenuBtn.innerHTML = navLinks.classList.contains('active') 
-                ? '<i class="fas fa-times"></i>' 
-                : '<i class="fas fa-bars"></i>';
-        });
+            menuOverlay.classList.toggle('active');
+            
+            // Toggle icon
+            const icon = mobileMenuBtn.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+                body.style.overflow = 'hidden'; // Prevent scrolling
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+                body.style.overflow = 'auto'; // Enable scrolling
+            }
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        
+        // Close menu when clicking overlay
+        menuOverlay.addEventListener('click', toggleMobileMenu);
 
         // Close mobile menu when clicking a link
         document.querySelectorAll('.nav-links a').forEach(link => {
             link.addEventListener('click', () => {
                 navLinks.classList.remove('active');
-                mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                menuOverlay.classList.remove('active');
+                mobileMenuBtn.querySelector('i').classList.remove('fa-times');
+                mobileMenuBtn.querySelector('i').classList.add('fa-bars');
+                body.style.overflow = 'auto';
             });
+        });
+
+        // Close menu when pressing Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navLinks.classList.contains('active')) {
+                toggleMobileMenu();
+            }
         });
 
         // Project Filtering
@@ -685,6 +784,13 @@
                     card.style.opacity = '1';
                     card.style.transform = 'translateY(0)';
                 }, 100 + index * 100);
+            });
+            
+            // Close menu if open on resize to desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768 && navLinks.classList.contains('active')) {
+                    toggleMobileMenu();
+                }
             });
         });
     </script>
